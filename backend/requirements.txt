@@ -1,0 +1,16 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+sqlalchemy==2.0.36
+# psycopg2-binary — instalar solo con PostgreSQL: pip install psycopg2-binary
+python-jose[cryptography]==3.3.0
+bcrypt==4.2.1
+python-multipart==0.0.20
+pydantic-settings==2.7.0
+python-docx==1.1.2
+reportlab==4.2.5
+svglib==1.5.1
+# Pillow: no fijar version antigua (11.x no compila en Python 3.14 en Windows).
+# reportlab/svglib lo usan para logos; si falta: pip install "Pillow>=12.0.0"
+openpyxl==3.1.5
+alembic==1.14.0
+python-dotenv==1.0.1
