@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+*.db
+.env
+.venv/
+venv/
+dist/
+node_modules/
+*.log
+
+# Angular
+frontend/dist/
+frontend/.angular/
+
+# IDE / SO
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+Desktop.ini
