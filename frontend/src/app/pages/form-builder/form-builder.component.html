@@ -1,0 +1,152 @@
+<div class="builder-layout">
+  <div class="oati-card builder-panel">
+    <div class="card-header card-header-actions">
+      <span>GESTIÓN DE FORMULARIO</span>
+      <button class="btn-confirm btn-sm" (click)="openCreate()" matTooltip="Crear un nuevo campo para el formulario">
+        <mat-icon>add</mat-icon> Crear campo
+      </button>
+    </div>
+    <div class="card-body">
+      <p class="hint">
+        <mat-icon class="hint-icon">info</mat-icon>
+        Arrastre los campos para reordenar. Haga clic en un campo para editar, duplicar o eliminar.
+      </p>
+
+      <div cdkDropList (cdkDropListDropped)="onDrop($event)" class="field-list">
+        @for (field of fields(); track field.id) {
+          <div class="field-item" cdkDrag [style.max-width.%]="field.width">
+            <div class="field-header" (click)="toggleMenu(field.id, $event)">
+              <mat-icon cdkDragHandle class="drag-handle" matTooltip="Arrastrar para reordenar">drag_indicator</mat-icon>
+              <span class="field-label-text">{{ field.label }} <small class="field-id">({{ field.name }})</small></span>
+              <span class="type-badge">{{ field.field_type }}{{ field.list_multiple ? ' (múltiple)' : '' }}</span>
+            </div>
+
+            @if (activeMenuId === field.id) {
+              <div class="field-menu">
+                <button (click)="openEdit(field)" matTooltip="Editar propiedades del campo">
+                  <mat-icon>edit</mat-icon> Editar
+                </button>
+                <button (click)="duplicateField(field)" matTooltip="Duplicar este campo">
+                  <mat-icon>content_copy</mat-icon> Duplicar
+                </button>
+                <button class="danger" (click)="deleteField(field)" matTooltip="Eliminar campo">
+                  <mat-icon>delete</mat-icon> Eliminar
+                </button>
+              </div>
+            }
+
+            <div class="field-preview-mini">
+              <app-dynamic-field
+                [field]="field"
+                [value]="previewData[field.name]"
+                (valueChange)="setPreviewValue(field.name, $event)"
+              />
+            </div>
+
+            <div class="resize-control">
+              <label>Ancho: {{ field.width }}%</label>
+              <input
+                type="range"
+                min="25"
+                max="100"
+                step="5"
+                [value]="field.width"
+                (input)="resizeFieldWidth(field, +$any($event.target).value)"
+                matTooltip="Estire el control para cambiar el ancho del campo"
+              />
+            </div>
+          </div>
+        } @empty {
+          <p class="empty">No hay campos. Cree el primero.</p>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="oati-card preview-panel">
+    <div class="card-header">VISTA PREVIA INSTANTÁNEA</div>
+    <div class="card-body preview-body">
+      @for (field of fields(); track field.id) {
+        <app-dynamic-field
+          [field]="field"
+          [value]="previewData[field.name]"
+          (valueChange)="setPreviewValue(field.name, $event)"
+        />
+      }
+    </div>
+  </div>
+</div>
+
+@if (showEditor) {
+  <div class="modal-overlay" (click)="closeEditor()">
+    <div class="modal-card editor-modal" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeEditor()">&times;</button>
+      <h2>{{ editingField.id ? 'Editar campo' : 'Crear campo' }}</h2>
+
+      <label>Nombre (identificador) *</label>
+      <input type="text" [(ngModel)]="editingField.name" placeholder="ej: alcance" [disabled]="!!editingField.id" />
+
+      <label>Etiqueta visible *</label>
+      <input type="text" [(ngModel)]="editingField.label" placeholder="ej: Alcance" />
+
+      <label>Tipo de campo</label>
+      <select [(ngModel)]="editingField.field_type">
+        @for (t of fieldTypes; track t.value) {
+          <option [value]="t.value">{{ t.label }}</option>
+        }
+      </select>
+
+      <label>Placeholder</label>
+      <input type="text" [(ngModel)]="editingField.placeholder" />
+
+      <label>Ancho (%)</label>
+      <input type="number" [(ngModel)]="editingField.width" min="25" max="100" step="5" />
+
+      <label>Altura (filas, para textarea)</label>
+      <input type="number" [(ngModel)]="editingField.height" min="1" max="10" />
+
+      <label>Máximo caracteres</label>
+      <input type="number" [(ngModel)]="editingField.max_length" />
+
+      <label>Valor mínimo</label>
+      <input type="number" [(ngModel)]="editingField.min_value" />
+
+      <label>Valor máximo</label>
+      <input type="number" [(ngModel)]="editingField.max_value" />
+
+      <label class="checkbox-label">
+        <input type="checkbox" [(ngModel)]="editingField.required" /> Obligatorio
+      </label>
+
+      @if (editingField.field_type === 'list') {
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="listMultipleChecked"
+            [ngModelOptions]="{ standalone: true }"
+          />
+          Selección múltiple (permite repetir opciones con contador)
+        </label>
+
+        <div class="list-options-editor">
+          <label>Opciones de lista</label>
+          <div class="add-option">
+            <input type="text" [(ngModel)]="listOptionInput" placeholder="Nueva opción" (keyup.enter)="addListOption()" />
+            <button type="button" class="btn-neutral btn-sm" (click)="addListOption()">Agregar</button>
+          </div>
+          @for (opt of editingField.list_options; track opt; let i = $index) {
+            <div class="option-item">
+              <span>{{ opt }}</span>
+              <button type="button" class="icon-btn danger" (click)="removeListOption(i)"><mat-icon>close</mat-icon></button>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeEditor()">Cancelar</button>
+        <button class="btn-confirm" (click)="saveField()">Guardar</button>
+      </div>
+    </div>
+  </div>
+}

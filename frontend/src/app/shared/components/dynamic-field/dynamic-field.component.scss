@@ -1,0 +1,105 @@
+.field-wrapper {
+  margin-bottom: 1.25rem;
+  min-width: 0;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    word-break: break-word;
+
+    &.required::after {
+      content: ' *';
+      color: var(--color-danger);
+      flex-shrink: 0;
+    }
+  }
+
+  input, textarea, select {
+    width: 100%;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    line-height: 1.4;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+}
+
+.help-icon {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+  color: var(--oati-maroon);
+  cursor: help;
+  flex-shrink: 0;
+}
+
+.list-pill-select {
+  border: 2px solid var(--oati-maroon) !important;
+  border-radius: 999px !important;
+  padding: 0.7rem 1rem !important;
+  background: #fff;
+  cursor: pointer;
+}
+
+.list-multiple {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-height: 0;
+}
+
+.selected-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--oati-maroon);
+  color: #fff;
+  border-radius: 6px;
+  padding: 0.45rem 0.55rem 0.45rem 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  max-width: 100%;
+}
+
+.tag-text {
+  word-break: break-word;
+  color: #fff;
+}
+
+.tag-remove {
+  background: transparent;
+  color: #fff;
+  border: none;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.15rem;
+  min-width: 20px;
+  opacity: 0.9;
+
+  &:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}

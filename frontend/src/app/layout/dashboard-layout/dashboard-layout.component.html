@@ -1,0 +1,42 @@
+<div class="dashboard">
+  <header class="top-header">
+    <h1>SISTEMA DE GESTIÓN DE PROYECTOS</h1>
+    <div class="user-info">
+      <span>{{ auth.username() }} ({{ auth.role() }})</span>
+      <button class="btn-cancel btn-sm" (click)="logout()" matTooltip="Cerrar sesión">Salir</button>
+    </div>
+  </header>
+
+  <div class="dashboard-body">
+    <nav class="sidebar">
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+         matTooltip="Panel principal">
+        <mat-icon>home</mat-icon> Home
+      </a>
+
+      <a routerLink="/dashboard/proyectos" routerLinkActive="active"
+         matTooltip="Ver, buscar y descargar proyectos">
+        <mat-icon>visibility</mat-icon> Proyectos existentes
+      </a>
+
+      @if (auth.isAdmin()) {
+        <a routerLink="/dashboard/gestion" routerLinkActive="active"
+           matTooltip="Crear, editar y eliminar proyectos">
+          <mat-icon>folder_open</mat-icon> Gestión Proyectos
+        </a>
+        <a routerLink="/dashboard/formulario" routerLinkActive="active"
+           matTooltip="Constructor visual del formulario">
+          <mat-icon>dynamic_form</mat-icon> Gestión de formulario
+        </a>
+      }
+    </nav>
+
+    <main class="main-content">
+      <router-outlet />
+    </main>
+  </div>
+
+  <app-institutional-footer />
+</div>
+
+<app-dialog />

@@ -1,0 +1,230 @@
+:root {
+  --oati-maroon: #9b2d2d;
+  --oati-maroon-dark: #7a2323;
+  --oati-bg: #e8e8e8;
+  --color-success: #2e7d32;
+  --color-danger: #c62828;
+  --color-neutral: #757575;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Roboto, Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  color: #333;
+  background: var(--oati-bg);
+}
+
+/* Botones institucionales */
+.btn-oati {
+  background: var(--oati-maroon);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 0.2s;
+
+  &:hover { background: var(--oati-maroon-dark); }
+}
+
+.btn-confirm {
+  background: var(--color-success);
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.25rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+
+  &:hover { filter: brightness(0.9); }
+}
+
+.btn-cancel {
+  background: var(--color-danger);
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.25rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+
+  &:hover { filter: brightness(0.9); }
+}
+
+.btn-neutral {
+  background: var(--color-neutral);
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.25rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+
+  &:hover { filter: brightness(0.9); }
+}
+
+.btn-sm {
+  padding: 0.4rem 0.85rem !important;
+  font-size: 0.85rem !important;
+}
+
+/* Tarjetas OATI */
+.oati-card {
+  background: #fff;
+  border-radius: 8px;
+  border: 2px solid var(--oati-maroon);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+  background: var(--oati-maroon);
+  color: #fff;
+  padding: 0.75rem 1.25rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  line-height: 1.4;
+}
+
+.card-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  span {
+    flex: 1;
+    min-width: 0;
+  }
+
+  button {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+}
+
+.card-body {
+  padding: 1.25rem;
+}
+
+/* Tabla */
+.oati-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    vertical-align: middle;
+  }
+
+  th {
+    background: var(--oati-maroon);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  tr.alt {
+    background: rgba(155, 45, 45, 0.06);
+  }
+
+  tbody tr:hover {
+    background: rgba(155, 45, 45, 0.1);
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 420px;
+  position: relative;
+  border-top: 4px solid var(--oati-maroon);
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+/* Tooltips — cuadro de diálogo blanco siempre encima */
+.cdk-overlay-container {
+  z-index: 10000 !important;
+}
+
+.cdk-overlay-pane .mat-mdc-tooltip-panel,
+.cdk-overlay-pane .mat-mdc-tooltip,
+.mat-mdc-tooltip-panel,
+.mat-mdc-tooltip.oati-help-tooltip {
+  --mdc-plain-tooltip-container-color: #ffffff !important;
+  --mdc-plain-tooltip-supporting-text-color: #1a1a1a !important;
+}
+
+.cdk-overlay-pane .mdc-tooltip__surface,
+.mat-mdc-tooltip .mdc-tooltip__surface,
+.mat-mdc-tooltip-surface,
+.oati-help-tooltip .mdc-tooltip__surface {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #1a1a1a !important;
+  border: 1px solid #bdbdbd !important;
+  border-radius: 8px !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18) !important;
+  padding: 10px 14px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+  max-width: 280px !important;
+  text-align: center !important;
+  opacity: 1 !important;
+}
+
+.mdc-tooltip--shown .mdc-tooltip__surface {
+  transform: scale(1) !important;
+}

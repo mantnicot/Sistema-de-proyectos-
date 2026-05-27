@@ -1,0 +1,81 @@
+@if (!showForm) {
+  <div class="oati-card">
+    <div class="card-header card-header-actions">
+      <span>GESTIÓN DE PROYECTOS</span>
+      <button class="btn-confirm btn-sm" (click)="openCreate()" matTooltip="Abrir formulario para nuevo proyecto">
+        <mat-icon>add</mat-icon> Crear proyecto
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="table-scroll">
+        <table class="oati-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of projects(); track p.id; let i = $index) {
+              <tr [class.alt]="i % 2 === 1">
+                <td>{{ p.id }}</td>
+                <td class="cell-text">{{ p.name }}</td>
+                <td class="cell-text">{{ p.description || '—' }}</td>
+                <td class="actions">
+                  <button class="icon-btn" matTooltip="Editar proyecto" (click)="openEdit(p)"><mat-icon>edit</mat-icon></button>
+                  <button class="icon-btn" matTooltip="Duplicar proyecto" (click)="duplicateProject(p)"><mat-icon>content_copy</mat-icon></button>
+                  <button class="icon-btn danger" matTooltip="Eliminar proyecto" (click)="deleteProject(p)"><mat-icon>delete</mat-icon></button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" class="empty">No hay proyectos. Cree uno nuevo.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+} @else {
+  <div class="form-layout">
+    <div class="oati-card form-panel">
+      <div class="card-header card-header-actions">
+        <span>{{ editingId ? 'EDITAR PROYECTO' : 'FORMULARIO DE INGRESO PROYECTO' }}</span>
+        <button type="button" class="modal-close" (click)="closeForm()" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="card-body form-body">
+        <label>Nombre del proyecto *</label>
+        <input type="text" [(ngModel)]="projectName" placeholder="Nombre del proyecto" />
+
+        <label>Descripción</label>
+        <input type="text" [(ngModel)]="projectDescription" placeholder="Descripción breve" />
+
+        @for (field of fields(); track field.id) {
+          <app-dynamic-field
+            [field]="field"
+            [value]="projectData[field.name]"
+            (valueChange)="setFieldValue(field.name, $event)"
+          />
+        }
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" (click)="closeForm()">Cancelar</button>
+          <button type="button" class="btn-oati" (click)="save()">Guardar Proyecto</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="oati-card preview-panel">
+      <div class="card-header">VISTA PREVIA DOCUMENTO</div>
+      <div class="card-body preview-scroll">
+        <app-document-preview
+          [projectName]="projectName"
+          [projectDescription]="projectDescription"
+          [fields]="fields()"
+          [data]="projectData"
+        />
+      </div>
+    </div>
+  </div>
+}

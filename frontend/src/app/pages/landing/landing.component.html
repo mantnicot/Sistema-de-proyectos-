@@ -1,0 +1,41 @@
+<div class="landing">
+  <header class="landing-header">
+    <h1>Sistema de gestión de proyectos</h1>
+  </header>
+
+  <section class="landing-hero">
+    <div class="hero-card">
+      <p>
+        El objetivo de este sistema es poder brindar una forma automática de generar los proyectos de forma más rápida
+      </p>
+    </div>
+  </section>
+
+  <section class="landing-cta">
+    <button class="btn-oati" (click)="openLogin()">INGRESO AL SISTEMA</button>
+  </section>
+
+  <app-institutional-footer></app-institutional-footer>
+</div>
+
+<app-dialog />
+
+@if (showLogin) {
+  <div class="modal-overlay" (click)="closeLogin()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeLogin()" aria-label="Cerrar">&times;</button>
+      <h2>Ingreso al sistema</h2>
+      <form (ngSubmit)="login()">
+        <label>Usuario</label>
+        <input type="text" [(ngModel)]="username" name="username" placeholder="Usuario" />
+        <label>Contraseña</label>
+        <input type="password" [(ngModel)]="password" name="password" placeholder="Contraseña" />
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" (click)="closeLogin()">Cancelar</button>
+          <button type="submit" class="btn-confirm">Ingresar</button>
+        </div>
+      </form>
+      <p class="hint">Admin: admin / admin123 — General: general / general123</p>
+    </div>
+  </div>
+}

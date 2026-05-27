@@ -1,0 +1,24 @@
+@if (dialog.state().visible) {
+  <div class="dialog-overlay">
+    <div class="dialog-box" [class]="'dialog-' + dialog.state().type">
+      @if (dialog.state().type !== 'loading') {
+        <button class="dialog-close" (click)="close()">&times;</button>
+      }
+      <h3>{{ dialog.state().title }}</h3>
+      @if (dialog.state().type === 'loading') {
+        <div class="spinner"></div>
+      }
+      <p>{{ dialog.state().message }}</p>
+      @if (dialog.state().type === 'confirm') {
+        <div class="dialog-actions">
+          <button class="btn-cancel" (click)="close()">{{ dialog.state().cancelText || 'Cancelar' }}</button>
+          <button class="btn-confirm" (click)="confirm()">{{ dialog.state().confirmText || 'Confirmar' }}</button>
+        </div>
+      } @else if (dialog.state().type !== 'loading') {
+        <div class="dialog-actions">
+          <button class="btn-confirm" (click)="close()">{{ dialog.state().confirmText || 'Aceptar' }}</button>
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,43 @@
+<div class="doc-preview">
+  <div class="doc-header-table">
+    <div class="doc-cell logo">UD</div>
+    <div class="doc-cell">
+      <div>{{ projectName.toUpperCase() || 'TÍTULO PROYECTO' }}</div>
+      <div>Macroproceso: Gestión de Recursos</div>
+      <div>Proceso: de Apoyo</div>
+    </div>
+    <div class="doc-cell meta">
+      <div>Código:</div>
+      <div>Versión: 02</div>
+      <div>Fecha de Aprobación:</div>
+    </div>
+    <div class="doc-cell oati">OATI</div>
+  </div>
+
+  <div class="doc-cover">
+    <h2>UNIVERSIDAD DISTRITAL</h2>
+    <h3>FRANCISCO JOSÉ DE CALDAS</h3>
+    <h1>{{ projectName.toUpperCase() || 'PROYECTO' }}</h1>
+    <p>OFICINA ASESORA DE TECNOLOGÍAS E INFORMACIÓN</p>
+  </div>
+
+  <div class="doc-toc">
+    <h4>TABLA DE CONTENIDO</h4>
+    <div class="toc-item"><span>INTRODUCCIÓN</span><span>3</span></div>
+    @for (field of fields; track field.id; let i = $index) {
+      <div class="toc-item"><span>{{ i + 1 }}. {{ field.label.toUpperCase() }}</span><span>{{ i + 4 }}</span></div>
+    }
+  </div>
+
+  <div class="doc-content">
+    <h4>INTRODUCCIÓN</h4>
+    <p class="italic">{{ introduction }}</p>
+
+    @for (field of fields; track field.id; let i = $index) {
+      <h4>{{ i + 1 }}. {{ field.label.toUpperCase() }}</h4>
+      <p class="italic">{{ getValue(field) }}</p>
+    }
+  </div>
+
+  <div class="doc-footer">Página 1 de {{ fields.length + 2 }}</div>
+</div>

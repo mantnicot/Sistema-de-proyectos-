@@ -1,0 +1,102 @@
+<div class="page-header">
+  <div class="oati-card flex-1">
+    <div class="card-header">PROYECTOS EXISTENTES</div>
+    <div class="card-body">
+      <div class="toolbar">
+        <input
+          type="search"
+          [(ngModel)]="search"
+          placeholder="Buscar proyectos..."
+          (keyup.enter)="searchProjects()"
+          matTooltip="Buscar por nombre o descripción"
+          matTooltipClass="oati-help-tooltip"
+        />
+        <button class="btn-neutral" (click)="searchProjects()" matTooltip="Ejecutar búsqueda" matTooltipClass="oati-help-tooltip">Buscar</button>
+        <button class="btn-confirm" (click)="exportExcel()" matTooltip="Descargar Excel con todos los proyectos" matTooltipClass="oati-help-tooltip">
+          <mat-icon>table_chart</mat-icon> Exportar Excel
+        </button>
+      </div>
+
+      <div class="table-scroll">
+        <table class="oati-table">
+          <thead>
+            <tr>
+              <th (click)="sort('id')" class="sortable">ID {{ sortBy === 'id' ? (sortDir === 'asc' ? '▲' : '▼') : '' }}</th>
+              <th (click)="sort('name')" class="sortable">Nombre {{ sortBy === 'name' ? (sortDir === 'asc' ? '▲' : '▼') : '' }}</th>
+              <th (click)="sort('description')" class="sortable">Descripción {{ sortBy === 'description' ? (sortDir === 'asc' ? '▲' : '▼') : '' }}</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of projects(); track p.id; let i = $index) {
+              <tr [class.alt]="i % 2 === 1">
+                <td>{{ p.id }}</td>
+                <td class="cell-name">{{ p.name }}</td>
+                <td class="cell-desc">{{ p.description || '—' }}</td>
+                <td class="actions">
+                  <button class="icon-btn" matTooltip="Ver detalle del proyecto" (click)="viewProject(p)">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <button class="icon-btn" matTooltip="Vista previa del documento" (click)="openDocPreview(p)">
+                    <mat-icon>preview</mat-icon>
+                  </button>
+                  <button class="icon-btn" matTooltip="Generar PDF" (click)="downloadPdf(p)">
+                    <mat-icon>picture_as_pdf</mat-icon>
+                  </button>
+                  <button class="icon-btn" matTooltip="Generar Word" (click)="downloadWord(p)">
+                    <mat-icon>description</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" class="empty">No hay proyectos registrados.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (showDetail && selectedProject()) {
+  <div class="modal-overlay" (click)="closeDetail()">
+    <div class="modal-card detail-modal" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeDetail()">&times;</button>
+      <h2>{{ selectedProject()!.name }}</h2>
+      <p class="desc">{{ selectedProject()!.description || 'Sin descripción' }}</p>
+      <div class="detail-grid">
+        @for (field of fields(); track field.id) {
+          <div class="detail-item">
+            <strong>{{ field.label }}</strong>
+            <span>{{ displayValue(field.name, selectedProject()!.data[field.name]) }}</span>
+          </div>
+        }
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeDetail()">Cerrar</button>
+        <button class="btn-neutral" (click)="openDocPreview(selectedProject()!); closeDetail()">Vista previa</button>
+        <button class="btn-confirm" (click)="downloadPdf(selectedProject()!)">Descargar PDF</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showDocPreview && previewProject()) {
+  <div class="modal-overlay" (click)="closeDocPreview()">
+    <div class="modal-card preview-modal" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeDocPreview()">&times;</button>
+      <h2>Vista previa — {{ previewProject()!.name }}</h2>
+      <app-document-preview
+        [projectName]="previewProject()!.name"
+        [projectDescription]="previewProject()!.description || ''"
+        [fields]="fields()"
+        [data]="previewProject()!.data"
+      />
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeDocPreview()">Cerrar</button>
+        <button class="btn-confirm" (click)="downloadPdf(previewProject()!)">Descargar PDF</button>
+        <button class="btn-neutral" (click)="downloadWord(previewProject()!)">Descargar Word</button>
+      </div>
+    </div>
+  </div>
+}
