@@ -100,9 +100,8 @@ def _migrate_schema() -> None:
     columns = {col["name"] for col in inspector.get_columns("form_fields")}
     with engine.begin() as conn:
         if "list_multiple" not in columns:
-            conn.execute(text("ALTER TABLE form_fields ADD COLUMN list_multiple BOOLEAN DEFAULT 0"))
+            conn.execute(text("ALTER TABLE form_fields ADD COLUMN list_multiple BOOLEAN DEFAULT FALSE"))
         conn.execute(
-            text("UPDATE form_fields SET list_multiple = 1 WHERE name = 'recursos' AND field_type = 'list'")
+            text("UPDATE form_fields SET list_multiple = TRUE WHERE name = 'recursos' AND field_type = 'list'")
         )
-        # Eliminar campo duplicado "Recursos" (mayúscula) que confunde la selección múltiple
         conn.execute(text("DELETE FROM form_fields WHERE name = 'Recursos'"))

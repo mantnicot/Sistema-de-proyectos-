@@ -49,6 +49,39 @@ docker compose up --build
 
 Acceso: http://localhost
 
+## Despliegue en la nube (Neon + Railway + Vercel)
+
+| Servicio | Plataforma | Carpeta |
+|----------|------------|---------|
+| Base de datos | [Neon](https://neon.tech) (PostgreSQL) | — |
+| Backend API | [Railway](https://railway.app) | `backend` |
+| Frontend | [Vercel](https://vercel.com) | `frontend` |
+
+### Railway (backend)
+
+- **Root Directory:** `backend`
+- **Variables:** `DATABASE_URL`, `JWT_SECRET_KEY`, `DEBUG=false`, `CORS_ORIGINS`
+- Generar dominio público en Networking.
+
+### Vercel (frontend)
+
+- **Root Directory:** `frontend`
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist/frontend/browser`
+- **Variable de entorno obligatoria:**
+
+| Variable | Ejemplo |
+|----------|---------|
+| `API_URL` | `https://tu-api.up.railway.app/api/v1` |
+
+### CORS
+
+En Railway, incluir la URL de Vercel en `CORS_ORIGINS`:
+
+```
+http://localhost:4200,https://tu-app.vercel.app
+```
+
 ## Variables de entorno
 
 Copie `backend/.env.example` a `backend/.env` y configure:
