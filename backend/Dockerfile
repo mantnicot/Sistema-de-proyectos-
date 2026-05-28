@@ -6,10 +6,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev gcc && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt psycopg2-binary
+RUN pip install --no-cache-dir -r requirements.txt psycopg2-binary "Pillow>=12.0.0"
 
 COPY . .
 
-EXPOSE 8000
-
-CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Railway inyecta PORT en runtime. No usar EXPOSE fijo: evita desajuste 8000 vs 8080.
+CMD ["sh", "-c", "exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
