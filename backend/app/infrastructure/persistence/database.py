@@ -136,3 +136,43 @@ def _migrate_schema() -> None:
                     "WHERE folder IS NOT NULL"
                 )
             )
+
+    _reset_work_projects_once(tables)
+
+
+def _reset_work_projects_once(tables: list[str]) -> None:
+    """Vacía proyectos en proceso una sola vez para empezar desde cero."""
+    from sqlalchemy import text
+
+    if "work_projects" not in tables:
+        return
+
+    migration_key = "work_data_reset_v2"
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "CREATE TABLE IF NOT EXISTS app_migrations ("
+                "key VARCHAR(100) PRIMARY KEY, applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+            )
+        )
+        applied = conn.execute(
+            text("SELECT key FROM app_migrations WHERE key = :key"),
+            {"key": migration_key},
+        ).fetchone()
+        if applied:
+            return
+
+        if "work_evidences" in tables:
+            conn.execute(text("DELETE FROM work_evidences"))
+        if "work_subfolders" in tables:
+            conn.execute(text("DELETE FROM work_subfolders"))
+        if "work_projects" in tables:
+            conn.execute(text("DELETE FROM work_projects"))
+        if "work_folders" in tables:
+            conn.execute(text("DELETE FROM work_folders"))
+
+        conn.execute(
+            text("INSERT INTO app_migrations (key) VALUES (:key)"),
+            {"key": migration_key},
+        )

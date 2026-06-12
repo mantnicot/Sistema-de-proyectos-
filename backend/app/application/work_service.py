@@ -29,11 +29,6 @@ def _avg_progress(evidences: list[WorkEvidenceModel]) -> float:
     return round(sum(e.progress_percent or 0 for e in evidences) / len(evidences), 1)
 
 
-def _project_progress(subfolders: list[WorkSubfolderModel]) -> float:
-    all_evidences = [e for sf in subfolders for e in sf.evidences]
-    return _avg_progress(all_evidences)
-
-
 class WorkProjectService:
     def __init__(self, db: Session):
         self.db = db
@@ -348,6 +343,5 @@ def build_project_response(project: WorkProjectModel, base_api: str = "") -> dic
         "folder_name": folder_name,
         "logo_url": logo_url,
         "order_index": project.order_index,
-        "progress_percent": _project_progress(list(project.subfolders)),
         "subfolders": subfolders,
     }

@@ -111,6 +111,5 @@ export interface WorkProject {
   folder_name: string;
   logo_url?: string;
   order_index: number;
-  progress_percent: number;
   subfolders: WorkSubfolder[];
 }

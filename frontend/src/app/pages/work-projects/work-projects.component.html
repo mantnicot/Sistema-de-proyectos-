@@ -56,13 +56,6 @@
               }
               <div class="project-info">
                 <h3>{{ p.name }}</h3>
-                <div class="progress-row">
-                  <span class="progress-label">Avance general</span>
-                  <div class="hp-bar">
-                    <div class="hp-fill" [style.width.%]="p.progress_percent"></div>
-                  </div>
-                  <span class="progress-pct">{{ p.progress_percent }}%</span>
-                </div>
               </div>
             </div>
             <div class="project-actions" (click)="$event.stopPropagation()">

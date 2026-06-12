@@ -46,7 +46,6 @@ class WorkProjectResponse(BaseModel):
     folder_name: str
     logo_url: Optional[str] = None
     order_index: int
-    progress_percent: float = 0
     subfolders: list[WorkSubfolderResponse] = Field(default_factory=list)
 
 
