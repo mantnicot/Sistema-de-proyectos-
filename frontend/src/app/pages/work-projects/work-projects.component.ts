@@ -9,7 +9,7 @@ import { DialogService } from '../../core/services/dialog.service';
 import {
   WorkEvidence,
   WorkEvidenceType,
-  WorkFolderCategory,
+  WorkFolder,
   WorkProject,
   WorkSubfolder,
 } from '../../core/models';
@@ -26,10 +26,14 @@ export class WorkProjectsComponent implements OnInit {
   private dialog = inject(DialogService);
   auth = inject(AuthService);
 
-  folders: WorkFolderCategory[] = ['POLUX', 'ACADEMICA'];
-  activeFolder = signal<WorkFolderCategory>('POLUX');
+  folders = signal<WorkFolder[]>([]);
+  activeFolderId = signal<number | null>(null);
   projects = signal<WorkProject[]>([]);
   expandedProjectId = signal<number | null>(null);
+
+  showFolderModal = false;
+  editingFolder: WorkFolder | null = null;
+  folderName = '';
 
   showProjectModal = false;
   editingProject: WorkProject | null = null;
@@ -50,12 +54,41 @@ export class WorkProjectsComponent implements OnInit {
   evidenceFile: File | null = null;
 
   ngOnInit(): void {
-    this.load();
+    this.loadFolders();
   }
 
-  load(): void {
+  activeFolderName(): string {
+    const id = this.activeFolderId();
+    return this.folders().find((f) => f.id === id)?.name ?? '';
+  }
+
+  loadFolders(): void {
+    this.dialog.showLoading('Cargando carpetas...');
+    this.api.getWorkFolders().subscribe({
+      next: (data) => {
+        this.dialog.hideLoading();
+        this.folders.set(data);
+        if (data.length && !this.activeFolderId()) {
+          this.activeFolderId.set(data[0].id);
+        }
+        if (this.activeFolderId()) {
+          this.loadProjects();
+        } else {
+          this.projects.set([]);
+        }
+      },
+      error: () => {
+        this.dialog.hideLoading();
+        this.dialog.showError('No se pudieron cargar las carpetas.');
+      },
+    });
+  }
+
+  loadProjects(): void {
+    const folderId = this.activeFolderId();
+    if (!folderId) return;
     this.dialog.showLoading('Cargando proyectos en proceso...');
-    this.api.getWorkProjects(this.activeFolder()).subscribe({
+    this.api.getWorkProjects(folderId).subscribe({
       next: (data) => {
         this.dialog.hideLoading();
         this.projects.set(data);
@@ -67,10 +100,64 @@ export class WorkProjectsComponent implements OnInit {
     });
   }
 
-  selectFolder(folder: WorkFolderCategory): void {
-    this.activeFolder.set(folder);
+  selectFolder(folderId: number): void {
+    this.activeFolderId.set(folderId);
     this.expandedProjectId.set(null);
-    this.load();
+    this.loadProjects();
+  }
+
+  openCreateFolder(): void {
+    this.editingFolder = null;
+    this.folderName = '';
+    this.showFolderModal = true;
+  }
+
+  openEditFolder(folder: WorkFolder): void {
+    this.editingFolder = folder;
+    this.folderName = folder.name;
+    this.showFolderModal = true;
+  }
+
+  saveFolder(): void {
+    if (!this.folderName.trim()) {
+      this.dialog.showError('Ingrese el nombre de la carpeta.');
+      return;
+    }
+    this.dialog.showLoading('Guardando...');
+    const req = this.editingFolder
+      ? this.api.updateWorkFolder(this.editingFolder.id, this.folderName)
+      : this.api.createWorkFolder(this.folderName);
+    req.subscribe({
+      next: (folder) => {
+        this.dialog.hideLoading();
+        this.showFolderModal = false;
+        this.dialog.showSuccess('Carpeta guardada.');
+        this.loadFolders();
+        if (!this.editingFolder) {
+          this.activeFolderId.set(folder.id);
+          this.loadProjects();
+        }
+      },
+      error: () => {
+        this.dialog.hideLoading();
+        this.dialog.showError('Error al guardar la carpeta.');
+      },
+    });
+  }
+
+  deleteFolder(folder: WorkFolder): void {
+    this.dialog.showConfirm(`¿Eliminar la carpeta "${folder.name}"?`, () => {
+      this.api.deleteWorkFolder(folder.id).subscribe({
+        next: () => {
+          this.dialog.showSuccess('Carpeta eliminada.');
+          if (this.activeFolderId() === folder.id) {
+            this.activeFolderId.set(null);
+          }
+          this.loadFolders();
+        },
+        error: () => this.dialog.showError('No se puede eliminar: la carpeta tiene proyectos o hubo un error.'),
+      });
+    });
   }
 
   logoUrl(project: WorkProject): string | null {
@@ -82,6 +169,10 @@ export class WorkProjectsComponent implements OnInit {
   }
 
   openCreateProject(): void {
+    if (!this.activeFolderId()) {
+      this.dialog.showError('Cree una carpeta antes de agregar proyectos.');
+      return;
+    }
     this.editingProject = null;
     this.projectName = '';
     this.showProjectModal = true;
@@ -101,13 +192,13 @@ export class WorkProjectsComponent implements OnInit {
     this.dialog.showLoading('Guardando...');
     const req = this.editingProject
       ? this.api.updateWorkProject(this.editingProject.id, { name: this.projectName })
-      : this.api.createWorkProject(this.projectName, this.activeFolder());
+      : this.api.createWorkProject(this.projectName, this.activeFolderId()!);
     req.subscribe({
       next: () => {
         this.dialog.hideLoading();
         this.showProjectModal = false;
         this.dialog.showSuccess('Proyecto guardado.');
-        this.load();
+        this.loadProjects();
       },
       error: () => {
         this.dialog.hideLoading();
@@ -123,7 +214,7 @@ export class WorkProjectsComponent implements OnInit {
         next: () => {
           this.dialog.hideLoading();
           this.dialog.showSuccess('Proyecto eliminado.');
-          this.load();
+          this.loadProjects();
         },
         error: () => {
           this.dialog.hideLoading();
@@ -142,7 +233,7 @@ export class WorkProjectsComponent implements OnInit {
       next: () => {
         this.dialog.hideLoading();
         this.dialog.showSuccess('Logo actualizado.');
-        this.load();
+        this.loadProjects();
       },
       error: () => {
         this.dialog.hideLoading();
@@ -177,7 +268,7 @@ export class WorkProjectsComponent implements OnInit {
         this.dialog.hideLoading();
         this.showSubfolderModal = false;
         this.dialog.showSuccess('Subcarpeta guardada.');
-        this.load();
+        this.loadProjects();
       },
       error: () => {
         this.dialog.hideLoading();
@@ -191,7 +282,7 @@ export class WorkProjectsComponent implements OnInit {
       this.api.deleteWorkSubfolder(sf.id).subscribe({
         next: () => {
           this.dialog.showSuccess('Subcarpeta eliminada.');
-          this.load();
+          this.loadProjects();
         },
         error: () => this.dialog.showError('Error al eliminar.'),
       });
@@ -281,7 +372,7 @@ export class WorkProjectsComponent implements OnInit {
     this.dialog.hideLoading();
     this.showEvidenceModal = false;
     this.dialog.showSuccess('Evidencia guardada.');
-    this.load();
+    this.loadProjects();
   }
 
   private evidenceError(): void {
@@ -294,7 +385,7 @@ export class WorkProjectsComponent implements OnInit {
       this.api.deleteWorkEvidence(ev.id).subscribe({
         next: () => {
           this.dialog.showSuccess('Evidencia eliminada.');
-          this.load();
+          this.loadProjects();
         },
         error: () => this.dialog.showError('Error al eliminar.'),
       });
@@ -342,7 +433,7 @@ export class WorkProjectsComponent implements OnInit {
       group_id: e.id === moved.id ? moved.group_id : e.group_id,
     }));
     this.api.reorderWorkEvidences(items).subscribe({
-      next: () => this.load(),
+      next: () => this.loadProjects(),
       error: () => this.dialog.showError('Error al reordenar.'),
     });
   }
@@ -350,7 +441,7 @@ export class WorkProjectsComponent implements OnInit {
   ungroupEvidence(ev: WorkEvidence): void {
     if (!this.auth.isAdmin()) return;
     this.api.updateWorkEvidence(ev.id, { group_id: null }).subscribe({
-      next: () => this.load(),
+      next: () => this.loadProjects(),
       error: () => this.dialog.showError('Error al desagrupar.'),
     });
   }

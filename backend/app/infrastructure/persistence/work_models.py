@@ -6,17 +6,28 @@ from sqlalchemy.orm import relationship
 from app.infrastructure.persistence.database import Base
 
 
+class WorkFolderModel(Base):
+    __tablename__ = "work_folders"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(100), nullable=False, unique=True)
+    order_index = Column(Integer, default=0)
+
+    projects = relationship("WorkProjectModel", back_populates="folder")
+
+
 class WorkProjectModel(Base):
     __tablename__ = "work_projects"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(255), nullable=False)
-    folder = Column(String(50), nullable=False, index=True)
+    folder_id = Column(Integer, ForeignKey("work_folders.id", ondelete="RESTRICT"), nullable=False, index=True)
     logo_path = Column(String(500), nullable=True)
     order_index = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    folder = relationship("WorkFolderModel", back_populates="projects")
     subfolders = relationship(
         "WorkSubfolderModel",
         back_populates="project",

@@ -25,10 +25,25 @@ class WorkSubfolderResponse(BaseModel):
     evidences: list[WorkEvidenceResponse] = Field(default_factory=list)
 
 
+class WorkFolderResponse(BaseModel):
+    id: int
+    name: str
+    order_index: int
+
+
+class WorkFolderCreate(BaseModel):
+    name: str
+
+
+class WorkFolderUpdate(BaseModel):
+    name: Optional[str] = None
+
+
 class WorkProjectResponse(BaseModel):
     id: int
     name: str
-    folder: str
+    folder_id: int
+    folder_name: str
     logo_url: Optional[str] = None
     order_index: int
     progress_percent: float = 0
@@ -37,12 +52,12 @@ class WorkProjectResponse(BaseModel):
 
 class WorkProjectCreate(BaseModel):
     name: str
-    folder: str
+    folder_id: int
 
 
 class WorkProjectUpdate(BaseModel):
     name: Optional[str] = None
-    folder: Optional[str] = None
+    folder_id: Optional[int] = None
 
 
 class WorkSubfolderCreate(BaseModel):

@@ -9,6 +9,9 @@ from app.application.work_schemas import (
     WorkEvidenceCreateJson,
     WorkEvidenceResponse,
     WorkEvidenceUpdate,
+    WorkFolderCreate,
+    WorkFolderResponse,
+    WorkFolderUpdate,
     WorkProjectCreate,
     WorkProjectResponse,
     WorkProjectUpdate,
@@ -17,6 +20,7 @@ from app.application.work_schemas import (
 )
 from app.application.work_service import (
     WorkProjectService,
+    build_folder_response,
     build_project_response,
     build_evidence_response,
     build_subfolder_response,
@@ -36,14 +40,67 @@ def _api_base() -> str:
     return "/api/v1"
 
 
+@router.get("/folders", response_model=list[WorkFolderResponse])
+def list_work_folders(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    return [build_folder_response(f) for f in _svc(db).list_folders()]
+
+
+@router.post("/folders", response_model=WorkFolderResponse, status_code=201)
+def create_work_folder(
+    body: WorkFolderCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
+):
+    try:
+        folder = _svc(db).create_folder(body.name)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return build_folder_response(folder)
+
+
+@router.put("/folders/{folder_id}", response_model=WorkFolderResponse)
+def update_work_folder(
+    folder_id: int,
+    body: WorkFolderUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
+):
+    try:
+        folder = _svc(db).update_folder(folder_id, body.name)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if not folder:
+        raise HTTPException(status_code=404, detail="Carpeta no encontrada")
+    return build_folder_response(folder)
+
+
+@router.delete("/folders/{folder_id}")
+def delete_work_folder(
+    folder_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
+):
+    try:
+        if not _svc(db).delete_folder(folder_id):
+            raise HTTPException(status_code=404, detail="Carpeta no encontrada")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"message": "Carpeta eliminada"}
+
+
 @router.get("", response_model=list[WorkProjectResponse])
 def list_work_projects(
-    folder: str,
+    folder_id: int,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     svc = _svc(db)
-    projects = svc.list_by_folder(folder.upper())
+    if not svc.get_folder(folder_id):
+        raise HTTPException(status_code=404, detail="Carpeta no encontrada")
+    projects = svc.list_by_folder_id(folder_id)
     base = _api_base()
     return [build_project_response(p, base) for p in projects]
 
@@ -69,7 +126,7 @@ def create_work_project(
 ):
     svc = _svc(db)
     try:
-        project = svc.create(body.name, body.folder.upper())
+        project = svc.create(body.name, body.folder_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     project = svc.get(project.id)
@@ -85,7 +142,7 @@ def update_work_project(
 ):
     svc = _svc(db)
     try:
-        project = svc.update(project_id, body.name, body.folder.upper() if body.folder else None)
+        project = svc.update(project_id, body.name, body.folder_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     if not project:

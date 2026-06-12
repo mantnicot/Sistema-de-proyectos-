@@ -8,7 +8,7 @@ import {
   FormFieldPayload,
   Project,
   WorkEvidence,
-  WorkFolderCategory,
+  WorkFolder,
   WorkProject,
   WorkSubfolder,
 } from '../models';
@@ -118,17 +118,33 @@ export class ApiService {
   }
 
   // Proyectos en proceso
-  getWorkProjects(folder: WorkFolderCategory) {
+  getWorkFolders() {
+    return this.http.get<WorkFolder[]>(`${environment.apiUrl}/work-projects/folders`);
+  }
+
+  createWorkFolder(name: string) {
+    return this.http.post<WorkFolder>(`${environment.apiUrl}/work-projects/folders`, { name });
+  }
+
+  updateWorkFolder(id: number, name: string) {
+    return this.http.put<WorkFolder>(`${environment.apiUrl}/work-projects/folders/${id}`, { name });
+  }
+
+  deleteWorkFolder(id: number) {
+    return this.http.delete<ApiMessage>(`${environment.apiUrl}/work-projects/folders/${id}`);
+  }
+
+  getWorkProjects(folderId: number) {
     return this.http.get<WorkProject[]>(`${environment.apiUrl}/work-projects`, {
-      params: new HttpParams().set('folder', folder),
+      params: new HttpParams().set('folder_id', String(folderId)),
     });
   }
 
-  createWorkProject(name: string, folder: WorkFolderCategory) {
-    return this.http.post<WorkProject>(`${environment.apiUrl}/work-projects`, { name, folder });
+  createWorkProject(name: string, folderId: number) {
+    return this.http.post<WorkProject>(`${environment.apiUrl}/work-projects`, { name, folder_id: folderId });
   }
 
-  updateWorkProject(id: number, data: { name?: string; folder?: WorkFolderCategory }) {
+  updateWorkProject(id: number, data: { name?: string; folder_id?: number }) {
     return this.http.put<WorkProject>(`${environment.apiUrl}/work-projects/${id}`, data);
   }
 

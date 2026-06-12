@@ -96,13 +96,43 @@ def _migrate_schema() -> None:
     from sqlalchemy import inspect, text
 
     inspector = inspect(engine)
-    if "form_fields" not in inspector.get_table_names():
+    tables = inspector.get_table_names()
+
+    if "form_fields" in tables:
+        columns = {col["name"] for col in inspector.get_columns("form_fields")}
+        with engine.begin() as conn:
+            if "list_multiple" not in columns:
+                conn.execute(text("ALTER TABLE form_fields ADD COLUMN list_multiple BOOLEAN DEFAULT FALSE"))
+            conn.execute(
+                text("UPDATE form_fields SET list_multiple = TRUE WHERE name = 'recursos' AND field_type = 'list'")
+            )
+            conn.execute(text("DELETE FROM form_fields WHERE name = 'Recursos'"))
+
+    if "work_projects" not in tables:
         return
-    columns = {col["name"] for col in inspector.get_columns("form_fields")}
+
+    project_columns = {col["name"] for col in inspector.get_columns("work_projects")}
+
     with engine.begin() as conn:
-        if "list_multiple" not in columns:
-            conn.execute(text("ALTER TABLE form_fields ADD COLUMN list_multiple BOOLEAN DEFAULT FALSE"))
-        conn.execute(
-            text("UPDATE form_fields SET list_multiple = TRUE WHERE name = 'recursos' AND field_type = 'list'")
-        )
-        conn.execute(text("DELETE FROM form_fields WHERE name = 'Recursos'"))
+        if "folder_id" not in project_columns and "folder" in project_columns:
+            rows = conn.execute(text("SELECT DISTINCT folder FROM work_projects WHERE folder IS NOT NULL")).fetchall()
+            for i, (folder_name,) in enumerate(rows):
+                if not folder_name:
+                    continue
+                existing = conn.execute(
+                    text("SELECT id FROM work_folders WHERE name = :name"),
+                    {"name": folder_name},
+                ).fetchone()
+                if not existing:
+                    conn.execute(
+                        text("INSERT INTO work_folders (name, order_index) VALUES (:name, :idx)"),
+                        {"name": folder_name, "idx": i},
+                    )
+            conn.execute(text("ALTER TABLE work_projects ADD COLUMN folder_id INTEGER"))
+            conn.execute(
+                text(
+                    "UPDATE work_projects SET folder_id = "
+                    "(SELECT id FROM work_folders WHERE work_folders.name = work_projects.folder) "
+                    "WHERE folder IS NOT NULL"
+                )
+            )

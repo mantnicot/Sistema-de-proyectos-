@@ -6,9 +6,10 @@ from typing import Optional
 
 from sqlalchemy.orm import Session, joinedload
 
-from app.domain.work_entities import EvidenceType, WorkFolderCategory
+from app.domain.work_entities import EvidenceType
 from app.infrastructure.persistence.work_models import (
     WorkEvidenceModel,
+    WorkFolderModel,
     WorkProjectModel,
     WorkSubfolderModel,
 )
@@ -37,13 +38,60 @@ class WorkProjectService:
     def __init__(self, db: Session):
         self.db = db
 
-    def list_by_folder(self, folder: str) -> list[WorkProjectModel]:
+    def list_folders(self) -> list[WorkFolderModel]:
+        return self.db.query(WorkFolderModel).order_by(WorkFolderModel.order_index, WorkFolderModel.id).all()
+
+    def get_folder(self, folder_id: int) -> Optional[WorkFolderModel]:
+        return self.db.query(WorkFolderModel).filter(WorkFolderModel.id == folder_id).first()
+
+    def create_folder(self, name: str) -> WorkFolderModel:
+        name = name.strip()
+        if not name:
+            raise ValueError("El nombre de la carpeta es obligatorio.")
+        if self.db.query(WorkFolderModel).filter(WorkFolderModel.name == name).first():
+            raise ValueError("Ya existe una carpeta con ese nombre.")
+        count = self.db.query(WorkFolderModel).count()
+        folder = WorkFolderModel(name=name, order_index=count)
+        self.db.add(folder)
+        self.db.commit()
+        self.db.refresh(folder)
+        return folder
+
+    def update_folder(self, folder_id: int, name: Optional[str]) -> Optional[WorkFolderModel]:
+        folder = self.get_folder(folder_id)
+        if not folder:
+            return None
+        if name is not None:
+            name = name.strip()
+            if not name:
+                raise ValueError("El nombre de la carpeta es obligatorio.")
+            existing = self.db.query(WorkFolderModel).filter(WorkFolderModel.name == name, WorkFolderModel.id != folder_id).first()
+            if existing:
+                raise ValueError("Ya existe una carpeta con ese nombre.")
+            folder.name = name
+        self.db.commit()
+        self.db.refresh(folder)
+        return folder
+
+    def delete_folder(self, folder_id: int) -> bool:
+        folder = self.get_folder(folder_id)
+        if not folder:
+            return False
+        count = self.db.query(WorkProjectModel).filter(WorkProjectModel.folder_id == folder_id).count()
+        if count > 0:
+            raise ValueError("No se puede eliminar una carpeta que contiene proyectos.")
+        self.db.delete(folder)
+        self.db.commit()
+        return True
+
+    def list_by_folder_id(self, folder_id: int) -> list[WorkProjectModel]:
         return (
             self.db.query(WorkProjectModel)
             .options(
-                joinedload(WorkProjectModel.subfolders).joinedload(WorkSubfolderModel.evidences)
+                joinedload(WorkProjectModel.folder),
+                joinedload(WorkProjectModel.subfolders).joinedload(WorkSubfolderModel.evidences),
             )
-            .filter(WorkProjectModel.folder == folder)
+            .filter(WorkProjectModel.folder_id == folder_id)
             .order_by(WorkProjectModel.order_index, WorkProjectModel.id)
             .all()
         )
@@ -52,36 +100,37 @@ class WorkProjectService:
         return (
             self.db.query(WorkProjectModel)
             .options(
-                joinedload(WorkProjectModel.subfolders).joinedload(WorkSubfolderModel.evidences)
+                joinedload(WorkProjectModel.folder),
+                joinedload(WorkProjectModel.subfolders).joinedload(WorkSubfolderModel.evidences),
             )
             .filter(WorkProjectModel.id == project_id)
             .first()
         )
 
-    def create(self, name: str, folder: str) -> WorkProjectModel:
-        if folder not in {c.value for c in WorkFolderCategory}:
-            raise ValueError("Carpeta inválida. Use POLUX o ACADEMICA.")
+    def create(self, name: str, folder_id: int) -> WorkProjectModel:
+        if not self.get_folder(folder_id):
+            raise ValueError("Carpeta no encontrada.")
         max_order = (
             self.db.query(WorkProjectModel)
-            .filter(WorkProjectModel.folder == folder)
+            .filter(WorkProjectModel.folder_id == folder_id)
             .count()
         )
-        project = WorkProjectModel(name=name.strip(), folder=folder, order_index=max_order)
+        project = WorkProjectModel(name=name.strip(), folder_id=folder_id, order_index=max_order)
         self.db.add(project)
         self.db.commit()
         self.db.refresh(project)
         return project
 
-    def update(self, project_id: int, name: Optional[str], folder: Optional[str]) -> Optional[WorkProjectModel]:
+    def update(self, project_id: int, name: Optional[str], folder_id: Optional[int]) -> Optional[WorkProjectModel]:
         project = self.db.query(WorkProjectModel).filter(WorkProjectModel.id == project_id).first()
         if not project:
             return None
         if name is not None:
             project.name = name.strip()
-        if folder is not None:
-            if folder not in {c.value for c in WorkFolderCategory}:
-                raise ValueError("Carpeta inválida.")
-            project.folder = folder
+        if folder_id is not None:
+            if not self.get_folder(folder_id):
+                raise ValueError("Carpeta no encontrada.")
+            project.folder_id = folder_id
         self.db.commit()
         self.db.refresh(project)
         return self.get(project_id)
@@ -284,13 +333,19 @@ def build_subfolder_response(sf: WorkSubfolderModel, base_api: str = "") -> dict
     }
 
 
+def build_folder_response(folder: WorkFolderModel) -> dict:
+    return {"id": folder.id, "name": folder.name, "order_index": folder.order_index}
+
+
 def build_project_response(project: WorkProjectModel, base_api: str = "") -> dict:
     subfolders = [build_subfolder_response(sf, base_api) for sf in sorted(project.subfolders, key=lambda x: x.order_index)]
     logo_url = f"work-projects/{project.id}/logo" if project.logo_path else None
+    folder_name = project.folder.name if project.folder else ""
     return {
         "id": project.id,
         "name": project.name,
-        "folder": project.folder,
+        "folder_id": project.folder_id,
+        "folder_name": folder_name,
         "logo_url": logo_url,
         "order_index": project.order_index,
         "progress_percent": _project_progress(list(project.subfolders)),

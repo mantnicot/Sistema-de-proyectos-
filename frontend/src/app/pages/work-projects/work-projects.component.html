@@ -10,16 +10,37 @@
 
   <div class="card-body">
     <div class="folder-tabs">
-      @for (f of folders; track f) {
-        <button
-          class="folder-tab"
-          [class.active]="activeFolder() === f"
-          (click)="selectFolder(f)"
-        >
-          {{ f }}
+      @for (f of folders(); track f.id) {
+        <div class="folder-tab-wrap">
+          <button
+            class="folder-tab"
+            [class.active]="activeFolderId() === f.id"
+            (click)="selectFolder(f.id)"
+          >
+            {{ f.name }}
+          </button>
+          @if (auth.isAdmin()) {
+            <span class="tab-actions">
+              <button class="icon-btn sm" matTooltip="Editar carpeta" (click)="openEditFolder(f)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button class="icon-btn sm danger" matTooltip="Eliminar carpeta" (click)="deleteFolder(f)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </span>
+          }
+        </div>
+      }
+      @if (auth.isAdmin()) {
+        <button class="folder-tab add-tab" matTooltip="Nueva carpeta" (click)="openCreateFolder()">
+          <mat-icon>add</mat-icon>
         </button>
       }
     </div>
+
+    @if (!folders().length) {
+      <p class="empty">No hay carpetas. @if (auth.isAdmin()) { Cree una carpeta para organizar los proyectos. }</p>
+    }
 
     <div class="projects-grid">
       @for (p of projects(); track p.id) {
@@ -160,11 +181,26 @@
           }
         </div>
       } @empty {
-        <p class="empty">No hay proyectos en la carpeta {{ activeFolder() }}.</p>
+        <p class="empty">No hay proyectos en la carpeta {{ activeFolderName() }}.</p>
       }
     </div>
   </div>
 </div>
+
+@if (showFolderModal) {
+  <div class="modal-overlay" (click)="showFolderModal = false">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="showFolderModal = false">&times;</button>
+      <h2>{{ editingFolder ? 'Editar carpeta' : 'Nueva carpeta' }}</h2>
+      <label>Nombre de la carpeta *</label>
+      <input [(ngModel)]="folderName" placeholder="Nombre de la carpeta" />
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="showFolderModal = false">Cancelar</button>
+        <button class="btn-confirm" (click)="saveFolder()">Guardar</button>
+      </div>
+    </div>
+  </div>
+}
 
 @if (showProjectModal) {
   <div class="modal-overlay" (click)="showProjectModal = false">
@@ -173,7 +209,7 @@
       <h2>{{ editingProject ? 'Editar proyecto' : 'Nuevo proyecto' }}</h2>
       <label>Nombre del sistema / proyecto *</label>
       <input [(ngModel)]="projectName" placeholder="Nombre del proyecto" />
-      <p class="hint">Carpeta: <strong>{{ activeFolder() }}</strong></p>
+      <p class="hint">Carpeta: <strong>{{ activeFolderName() }}</strong></p>
       <div class="modal-actions">
         <button class="btn-cancel" (click)="showProjectModal = false">Cancelar</button>
         <button class="btn-confirm" (click)="saveProject()">Guardar</button>

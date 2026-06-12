@@ -5,11 +5,6 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-class WorkFolderCategory(str, Enum):
-    POLUX = "POLUX"
-    ACADEMICA = "ACADEMICA"
-
-
 class EvidenceType(str, Enum):
     DOCUMENT = "document"
     URL = "url"
@@ -35,10 +30,16 @@ class WorkSubfolder(BaseModel):
     order_index: int = 0
 
 
+class WorkFolder(BaseModel):
+    id: Optional[int] = None
+    name: str
+    order_index: int = 0
+
+
 class WorkProject(BaseModel):
     id: Optional[int] = None
     name: str
-    folder: WorkFolderCategory
+    folder_id: int
     logo_path: Optional[str] = None
     order_index: int = 0
     created_at: Optional[datetime] = None

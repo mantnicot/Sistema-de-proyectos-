@@ -74,8 +74,13 @@ export interface ApiMessage {
   success: boolean;
 }
 
-export type WorkFolderCategory = 'POLUX' | 'ACADEMICA';
 export type WorkEvidenceType = 'document' | 'url';
+
+export interface WorkFolder {
+  id: number;
+  name: string;
+  order_index: number;
+}
 
 export interface WorkEvidence {
   id: number;
@@ -102,7 +107,8 @@ export interface WorkSubfolder {
 export interface WorkProject {
   id: number;
   name: string;
-  folder: WorkFolderCategory;
+  folder_id: number;
+  folder_name: string;
   logo_url?: string;
   order_index: number;
   progress_percent: number;
