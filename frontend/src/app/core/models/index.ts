@@ -73,3 +73,38 @@ export interface ApiMessage {
   message: string;
   success: boolean;
 }
+
+export type WorkFolderCategory = 'POLUX' | 'ACADEMICA';
+export type WorkEvidenceType = 'document' | 'url';
+
+export interface WorkEvidence {
+  id: number;
+  subfolder_id: number;
+  evidence_type: WorkEvidenceType;
+  name: string;
+  progress_percent: number;
+  url?: string;
+  file_name?: string;
+  file_url?: string;
+  order_index: number;
+  group_id?: number | null;
+}
+
+export interface WorkSubfolder {
+  id: number;
+  project_id: number;
+  name: string;
+  order_index: number;
+  progress_percent: number;
+  evidences: WorkEvidence[];
+}
+
+export interface WorkProject {
+  id: number;
+  name: string;
+  folder: WorkFolderCategory;
+  logo_url?: string;
+  order_index: number;
+  progress_percent: number;
+  subfolders: WorkSubfolder[];
+}

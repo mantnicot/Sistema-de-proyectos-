@@ -30,10 +30,12 @@ from app.infrastructure.persistence.repositories import (
 )
 from app.infrastructure.security.jwt_handler import create_access_token, user_to_token_payload, verify_password
 from app.presentation.dependencies import get_current_user, require_admin
+from app.presentation.api.work_routes import router as work_router
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+router.include_router(work_router)
 
 
 def _field_service(db: Session) -> FormFieldService:

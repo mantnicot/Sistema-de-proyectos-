@@ -86,6 +86,7 @@ def get_db() -> Session:
 
 
 def init_db() -> None:
+    import app.infrastructure.persistence.work_models  # noqa: F401 — registra tablas work_*
     Base.metadata.create_all(bind=engine)
     _migrate_schema()
 

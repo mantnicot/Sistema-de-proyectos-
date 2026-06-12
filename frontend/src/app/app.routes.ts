@@ -22,6 +22,11 @@ export const routes: Routes = [
           import('./pages/projects-list/projects-list.component').then((m) => m.ProjectsListComponent),
       },
       {
+        path: 'proyectos-en-proceso',
+        loadComponent: () =>
+          import('./pages/work-projects/work-projects.component').then((m) => m.WorkProjectsComponent),
+      },
+      {
         path: 'gestion',
         canActivate: [adminGuard],
         loadComponent: () =>

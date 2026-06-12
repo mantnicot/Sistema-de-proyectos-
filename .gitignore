@@ -18,3 +18,6 @@ frontend/.angular/
 *.swp
 Thumbs.db
 Desktop.ini
+
+# Uploads de proyectos en proceso
+backend/uploads/

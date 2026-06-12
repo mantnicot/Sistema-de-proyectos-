@@ -19,6 +19,11 @@
         <mat-icon>visibility</mat-icon> Proyectos existentes
       </a>
 
+      <a routerLink="/dashboard/proyectos-en-proceso" routerLinkActive="active"
+         matTooltip="Proyectos en proceso POLUX y ACADEMICA">
+        <mat-icon>pending_actions</mat-icon> Proyectos en proceso
+      </a>
+
       @if (auth.isAdmin()) {
         <a routerLink="/dashboard/gestion" routerLinkActive="active"
            matTooltip="Crear, editar y eliminar proyectos">

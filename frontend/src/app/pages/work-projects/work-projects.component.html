@@ -1,0 +1,233 @@
+<div class="oati-card">
+  <div class="card-header card-header-actions">
+    <span>PROYECTOS EN PROCESO</span>
+    @if (auth.isAdmin()) {
+      <button class="btn-confirm btn-sm" (click)="openCreateProject()">
+        <mat-icon>add</mat-icon> Nuevo proyecto
+      </button>
+    }
+  </div>
+
+  <div class="card-body">
+    <div class="folder-tabs">
+      @for (f of folders; track f) {
+        <button
+          class="folder-tab"
+          [class.active]="activeFolder() === f"
+          (click)="selectFolder(f)"
+        >
+          {{ f }}
+        </button>
+      }
+    </div>
+
+    <div class="projects-grid">
+      @for (p of projects(); track p.id) {
+        <div class="project-card" [class.expanded]="expandedProjectId() === p.id">
+          <div class="project-header" (click)="toggleProject(p.id)">
+            <div class="project-identity">
+              @if (logoUrl(p)) {
+                <img [src]="logoUrl(p)!" [alt]="p.name" class="project-logo" />
+              } @else {
+                <div class="project-logo placeholder">
+                  <mat-icon>computer</mat-icon>
+                </div>
+              }
+              <div class="project-info">
+                <h3>{{ p.name }}</h3>
+                <div class="progress-row">
+                  <span class="progress-label">Avance general</span>
+                  <div class="hp-bar">
+                    <div class="hp-fill" [style.width.%]="p.progress_percent"></div>
+                  </div>
+                  <span class="progress-pct">{{ p.progress_percent }}%</span>
+                </div>
+              </div>
+            </div>
+            <div class="project-actions" (click)="$event.stopPropagation()">
+              @if (auth.isAdmin()) {
+                <label class="icon-btn" matTooltip="Subir logo del sistema">
+                  <mat-icon>image</mat-icon>
+                  <input type="file" accept="image/*" hidden (change)="onLogoSelected(p, $event)" />
+                </label>
+                <button class="icon-btn" matTooltip="Editar nombre" (click)="openEditProject(p)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button class="icon-btn danger" matTooltip="Eliminar" (click)="deleteProject(p)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              }
+              <mat-icon class="expand-icon">{{ expandedProjectId() === p.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </div>
+          </div>
+
+          @if (expandedProjectId() === p.id) {
+            <div class="project-body">
+              @if (auth.isAdmin()) {
+                <button class="btn-neutral btn-sm" (click)="openCreateSubfolder(p.id)">
+                  <mat-icon>create_new_folder</mat-icon> Nueva subcarpeta
+                </button>
+              }
+
+              @for (sf of p.subfolders; track sf.id) {
+                <div class="subfolder-card">
+                  <div class="subfolder-header">
+                    <div class="subfolder-title">
+                      <mat-icon>folder</mat-icon>
+                      <span>{{ sf.name }}</span>
+                    </div>
+                    <div class="progress-row compact">
+                      <div class="hp-bar">
+                        <div class="hp-fill" [style.width.%]="sf.progress_percent"></div>
+                      </div>
+                      <span class="progress-pct">{{ sf.progress_percent }}%</span>
+                    </div>
+                    @if (auth.isAdmin()) {
+                      <div class="subfolder-actions">
+                        <button class="icon-btn" (click)="openEditSubfolder(sf)"><mat-icon>edit</mat-icon></button>
+                        <button class="icon-btn danger" (click)="deleteSubfolder(sf)"><mat-icon>delete</mat-icon></button>
+                        <button class="btn-confirm btn-sm" (click)="openCreateEvidence(sf.id)">
+                          <mat-icon>add</mat-icon> Evidencia
+                        </button>
+                      </div>
+                    }
+                  </div>
+
+                  <div
+                    class="evidence-list"
+                    cdkDropList
+                    [cdkDropListDisabled]="!auth.isAdmin()"
+                    (cdkDropListDropped)="dropEvidence(sf, $event)"
+                  >
+                    @for (ev of sf.evidences; track ev.id) {
+                      <div
+                        class="evidence-item"
+                        [class.grouped]="isInGroup(ev)"
+                        [class]="groupClass(ev)"
+                        cdkDrag
+                        [cdkDragDisabled]="!auth.isAdmin()"
+                      >
+                        @if (auth.isAdmin()) {
+                          <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
+                        }
+                        <div class="evidence-content">
+                          <div class="evidence-top">
+                            <span class="ev-type-badge" [class.doc]="ev.evidence_type === 'document'">
+                              {{ ev.evidence_type === 'document' ? 'Documento' : 'URL' }}
+                            </span>
+                            <strong>{{ ev.name }}</strong>
+                            @if (auth.isAdmin()) {
+                              <button class="icon-btn sm" (click)="openEditEvidence(ev)"><mat-icon>edit</mat-icon></button>
+                              <button class="icon-btn sm danger" (click)="deleteEvidence(ev)"><mat-icon>close</mat-icon></button>
+                              @if (isInGroup(ev)) {
+                                <button class="icon-btn sm" matTooltip="Quitar del grupo" (click)="ungroupEvidence(ev)">
+                                  <mat-icon>link_off</mat-icon>
+                                </button>
+                              }
+                            }
+                          </div>
+                          <div class="progress-row">
+                            <div class="hp-bar small">
+                              <div class="hp-fill" [style.width.%]="ev.progress_percent"></div>
+                            </div>
+                            <span class="progress-pct">{{ ev.progress_percent }}%</span>
+                          </div>
+                          <div class="evidence-link">
+                            @if (ev.evidence_type === 'url') {
+                              <button class="link-btn" (click)="openUrl(ev)">
+                                <mat-icon>open_in_new</mat-icon> {{ ev.url }}
+                              </button>
+                            } @else {
+                              <button class="link-btn" (click)="downloadDocument(ev)">
+                                <mat-icon>description</mat-icon> {{ ev.file_name || 'Descargar documento' }}
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    } @empty {
+                      <p class="empty-ev">Sin evidencias en esta subcarpeta.</p>
+                    }
+                  </div>
+                  @if (auth.isAdmin()) {
+                    <p class="drag-hint">Arrastre evidencias para reordenar o agrupar con la anterior.</p>
+                  }
+                </div>
+              } @empty {
+                <p class="empty">No hay subcarpetas. @if (auth.isAdmin()) { Cree una para organizar evidencias. }</p>
+              }
+            </div>
+          }
+        </div>
+      } @empty {
+        <p class="empty">No hay proyectos en la carpeta {{ activeFolder() }}.</p>
+      }
+    </div>
+  </div>
+</div>
+
+@if (showProjectModal) {
+  <div class="modal-overlay" (click)="showProjectModal = false">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="showProjectModal = false">&times;</button>
+      <h2>{{ editingProject ? 'Editar proyecto' : 'Nuevo proyecto' }}</h2>
+      <label>Nombre del sistema / proyecto *</label>
+      <input [(ngModel)]="projectName" placeholder="Nombre del proyecto" />
+      <p class="hint">Carpeta: <strong>{{ activeFolder() }}</strong></p>
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="showProjectModal = false">Cancelar</button>
+        <button class="btn-confirm" (click)="saveProject()">Guardar</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showSubfolderModal) {
+  <div class="modal-overlay" (click)="showSubfolderModal = false">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="showSubfolderModal = false">&times;</button>
+      <h2>{{ editingSubfolder ? 'Editar subcarpeta' : 'Nueva subcarpeta' }}</h2>
+      <label>Nombre de la subcarpeta *</label>
+      <input [(ngModel)]="subfolderName" />
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="showSubfolderModal = false">Cancelar</button>
+        <button class="btn-confirm" (click)="saveSubfolder()">Guardar</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showEvidenceModal) {
+  <div class="modal-overlay" (click)="showEvidenceModal = false">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="showEvidenceModal = false">&times;</button>
+      <h2>{{ editingEvidence ? 'Editar evidencia' : 'Nueva evidencia' }}</h2>
+      <label>Nombre *</label>
+      <input [(ngModel)]="evidenceName" />
+      @if (!editingEvidence) {
+        <label>Tipo</label>
+        <select [(ngModel)]="evidenceType">
+          <option value="url">Enlace (URL)</option>
+          <option value="document">Documento</option>
+        </select>
+      }
+      @if (evidenceType === 'url' || editingEvidence?.evidence_type === 'url') {
+        <label>URL *</label>
+        <input [(ngModel)]="evidenceUrl" placeholder="https://..." />
+      }
+      @if (!editingEvidence && evidenceType === 'document') {
+        <label>Archivo *</label>
+        <input type="file" (change)="onEvidenceFileChange($event)" />
+      }
+      <label>Nivel de avance (%)</label>
+      <input type="number" min="0" max="100" [(ngModel)]="evidenceProgress" />
+      <div class="hp-bar preview-bar">
+        <div class="hp-fill" [style.width.%]="evidenceProgress"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="showEvidenceModal = false">Cancelar</button>
+        <button class="btn-confirm" (click)="saveEvidence()">Guardar</button>
+      </div>
+    </div>
+  </div>
+}

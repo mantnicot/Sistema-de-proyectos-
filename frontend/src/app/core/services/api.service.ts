@@ -2,7 +2,16 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { ApiMessage, FormField, FormFieldPayload, Project } from '../models';
+import {
+  ApiMessage,
+  FormField,
+  FormFieldPayload,
+  Project,
+  WorkEvidence,
+  WorkFolderCategory,
+  WorkProject,
+  WorkSubfolder,
+} from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -106,5 +115,91 @@ export class ApiService {
 
   exportExcelAll() {
     return this.http.get(`${environment.apiUrl}/projects/export/excel`, { responseType: 'blob' });
+  }
+
+  // Proyectos en proceso
+  getWorkProjects(folder: WorkFolderCategory) {
+    return this.http.get<WorkProject[]>(`${environment.apiUrl}/work-projects`, {
+      params: new HttpParams().set('folder', folder),
+    });
+  }
+
+  createWorkProject(name: string, folder: WorkFolderCategory) {
+    return this.http.post<WorkProject>(`${environment.apiUrl}/work-projects`, { name, folder });
+  }
+
+  updateWorkProject(id: number, data: { name?: string; folder?: WorkFolderCategory }) {
+    return this.http.put<WorkProject>(`${environment.apiUrl}/work-projects/${id}`, data);
+  }
+
+  deleteWorkProject(id: number) {
+    return this.http.delete<ApiMessage>(`${environment.apiUrl}/work-projects/${id}`);
+  }
+
+  uploadWorkProjectLogo(projectId: number, file: File) {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<ApiMessage & { logo_url?: string }>(
+      `${environment.apiUrl}/work-projects/${projectId}/logo`,
+      form
+    );
+  }
+
+  workProjectLogoUrl(logoPath?: string): string | null {
+    if (!logoPath) return null;
+    return `${environment.apiUrl}/${logoPath}`;
+  }
+
+  createWorkSubfolder(projectId: number, name: string) {
+    return this.http.post<WorkSubfolder>(`${environment.apiUrl}/work-projects/${projectId}/subfolders`, { name });
+  }
+
+  updateWorkSubfolder(id: number, name: string) {
+    return this.http.put<WorkSubfolder>(`${environment.apiUrl}/work-projects/subfolders/${id}`, { name });
+  }
+
+  deleteWorkSubfolder(id: number) {
+    return this.http.delete<ApiMessage>(`${environment.apiUrl}/work-projects/subfolders/${id}`);
+  }
+
+  createWorkEvidenceDocument(subfolderId: number, name: string, progress: number, file: File) {
+    const form = new FormData();
+    form.append('evidence_type', 'document');
+    form.append('name', name);
+    form.append('progress_percent', String(progress));
+    form.append('file', file);
+    return this.http.post<WorkEvidence>(`${environment.apiUrl}/work-projects/subfolders/${subfolderId}/evidences`, form);
+  }
+
+  createWorkEvidenceUrl(subfolderId: number, name: string, url: string, progress: number) {
+    const form = new FormData();
+    form.append('evidence_type', 'url');
+    form.append('name', name);
+    form.append('progress_percent', String(progress));
+    form.append('url', url);
+    return this.http.post<WorkEvidence>(`${environment.apiUrl}/work-projects/subfolders/${subfolderId}/evidences`, form);
+  }
+
+  updateWorkEvidence(id: number, data: Partial<WorkEvidence>) {
+    return this.http.put<WorkEvidence>(`${environment.apiUrl}/work-projects/evidences/${id}`, data);
+  }
+
+  deleteWorkEvidence(id: number) {
+    return this.http.delete<ApiMessage>(`${environment.apiUrl}/work-projects/evidences/${id}`);
+  }
+
+  reorderWorkEvidences(items: { id: number; order_index: number; group_id?: number | null }[]) {
+    return this.http.put<ApiMessage>(`${environment.apiUrl}/work-projects/evidences/reorder`, { items });
+  }
+
+  downloadWorkEvidenceFile(evidenceId: number) {
+    return this.http.get(`${environment.apiUrl}/work-projects/evidences/${evidenceId}/file`, {
+      responseType: 'blob',
+    });
+  }
+
+  workEvidenceFileUrl(filePath?: string): string | null {
+    if (!filePath) return null;
+    return `${environment.apiUrl}/${filePath}`;
   }
 }
