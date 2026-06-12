@@ -1,8 +1,12 @@
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.application.work_schemas import (
     ReorderRequest,
@@ -129,7 +133,17 @@ def create_work_project(
         project = svc.create(body.name, body.folder_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except IntegrityError as e:
+        db.rollback()
+        logger.exception("Error de integridad al crear proyecto")
+        raise HTTPException(status_code=400, detail="No se pudo crear el proyecto. Verifique la carpeta.") from e
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.exception("Error de base de datos al crear proyecto")
+        raise HTTPException(status_code=500, detail="Error interno al crear el proyecto.") from e
     project = svc.get(project.id)
+    if not project:
+        raise HTTPException(status_code=500, detail="Proyecto creado pero no encontrado.")
     return build_project_response(project, _api_base())
 
 

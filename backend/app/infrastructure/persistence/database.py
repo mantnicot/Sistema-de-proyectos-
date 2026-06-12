@@ -112,6 +112,7 @@ def _migrate_schema() -> None:
         return
 
     project_columns = {col["name"] for col in inspector.get_columns("work_projects")}
+    is_postgres = settings.DATABASE_URL.startswith("postgresql")
 
     with engine.begin() as conn:
         if "folder_id" not in project_columns and "folder" in project_columns:
@@ -136,6 +137,12 @@ def _migrate_schema() -> None:
                     "WHERE folder IS NOT NULL"
                 )
             )
+
+        if "folder" in project_columns:
+            if is_postgres:
+                conn.execute(text("ALTER TABLE work_projects DROP COLUMN IF EXISTS folder"))
+            else:
+                conn.execute(text("ALTER TABLE work_projects DROP COLUMN folder"))
 
     _reset_work_projects_once(tables)
 

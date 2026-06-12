@@ -15,7 +15,10 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
 
-    CORS_ORIGINS: str = "http://localhost:4200,http://127.0.0.1:4200"
+    CORS_ORIGINS: str = (
+        "http://localhost:4200,http://127.0.0.1:4200,"
+        "https://sistema-de-proyectos-beta.vercel.app"
+    )
 
     INSTITUCION_NOMBRE: str = "UNIVERSIDAD DISTRITAL FRANCISCO JOSÉ DE CALDAS"
     OATI_NOMBRE: str = "OFICINA ASESORA DE TECNOLOGÍAS E INFORMACIÓN"
